@@ -8,7 +8,7 @@
 
 #include "list.h"
 
-RecordList record_list={0,NULL};
+RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 
 int add_record(struct Record *);
 int add_track(struct Track *);
@@ -20,23 +20,17 @@ int find_track(char *title);
 int add_record(Record *record)
 {
    record_list.record_cnt += 1; 
-   if(record_list.records == NULL){
-        record_list.records = record;
-        return 0;
-   }
-
-   list_add_tail(&record->list,&record_list.records->list);
+   list_add_tail(&record->list,&record_list.list);
    return 0;
 } 
 
 int main(int argc, char **argv)
 {
-    Record *record1 = (struct Record *)malloc(sizeof(struct Record));
-    *record1 = (struct Record){ .title="title1",
+    Record record1 = { .title="title1",
         .artist="heavy1",
         .track_count=1,
         .track=NULL,
-        .list=LIST_HEAD_INIT(record1->list)
+        .list=LIST_HEAD_INIT(record1.list)
     };
     Record *record2 = (struct Record *)malloc(sizeof(struct Record));
     *record2 = (struct Record){ .title="title2",
@@ -53,20 +47,20 @@ int main(int argc, char **argv)
         .list=LIST_HEAD_INIT(record3->list)
     };
 
-    add_record(record1);
+    add_record(&record1);
     add_record(record2);
     add_record(record3);
 
     struct list_head *pos,*n = NULL;
 
-    list_for_each_safe(pos,n,&record_list.records->list){
+    list_for_each_safe(pos,n,&record_list.list){
         Record *rtmp = container_of(pos,struct Record,list);
         printf("record.artist=%s\n",rtmp->artist);
     }
 
-    //list_del(&record2->list);
+    list_del(&record2->list);
 
-    list_for_each_safe(pos,n,&record_list.records->list){
+    list_for_each_safe(pos,n,&record_list.list){
         Record *rtmp = container_of(pos,struct Record,list);
         printf("record.artist=%s\n",rtmp->artist);
     }

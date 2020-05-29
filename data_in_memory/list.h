@@ -8,6 +8,11 @@ struct list_head{
 
 #define MAX_LEN 256 
 
+#define LIST_HEAD_INIT(name)  {&(name), &(name)}
+
+#define LIST_HEAD(name) \
+    struct list_head name = LIST_HEAD_INIT(name)
+
 typedef struct Track{
     char title[MAX_LEN];
     char style[MAX_LEN];
@@ -24,13 +29,8 @@ typedef struct Record{
 
 typedef struct RecordList{
     int record_cnt;
-    struct Record *records;
+    struct list_head list;
 }RecordList;
-
-#define LIST_HEAD_INIT(name)  {&(name), &(name)}
-
-#define LIST_HEAD(name) \
-    struct list_head name = LIST_HEAD_INIT(name)
 
 #define list_add(elm,head) do { \
     (elm)->next = (head)->next;     \
