@@ -34,9 +34,7 @@ typedef struct RecordList{
 
 #define list_add(elm,head) do { \
     (elm)->next = (head)->next;     \
-    if((head)->next != NULL){       \
     (head)->next->prev = (elm);     \
-    }                               \
     (head)->next = (elm);           \
     (elm)->prev = (head);           \
 }while(0)                       
@@ -44,17 +42,13 @@ typedef struct RecordList{
 
 #define list_add_tail(elm,head) do { \
     (elm)->prev = (head)->prev;          \
-    if((head)->prev != NULL){           \
     (head)->prev->next = (elm);           \
-    }                                   \
     (elm)->next = (head);               \
     (head)->prev = (elm);               \
 }while(0) 
 
 #define list_del(elm) do {           \
-    if((elm)->next != NULL){         \
     (elm)->next->prev = (elm)->prev; \
-    }                                \
     (elm)->prev->next = (elm)->next; \
 }while(0)
 
