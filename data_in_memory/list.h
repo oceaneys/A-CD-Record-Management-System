@@ -23,7 +23,7 @@ typedef struct Record{
     char title[MAX_LEN];
     char artist[MAX_LEN];
     int  track_count;
-    struct Track *track;
+    struct list_head track;
     struct list_head list;
 }Record;
 
