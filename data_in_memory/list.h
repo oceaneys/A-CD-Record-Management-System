@@ -14,17 +14,17 @@ struct list_head{
     struct list_head name = LIST_HEAD_INIT(name)
 
 typedef struct Track{
+    struct list_head list;
     char title[MAX_LEN];
     char style[MAX_LEN];
-    struct list_head list;
 }Track;
 
 typedef struct Record{
+    struct list_head list;
     char title[MAX_LEN];
     char artist[MAX_LEN];
     int  track_count;
     struct list_head track;
-    struct list_head list;
 }Record;
 
 typedef struct RecordList{
