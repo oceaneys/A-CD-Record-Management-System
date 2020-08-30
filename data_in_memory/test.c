@@ -9,7 +9,10 @@
 #include "list.h"
 
 RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
-LIST_HEAD(record_result_list);
+
+
+/*two global list created for `find_*_by_title`*/
+LIST_HEAD(record_result_list); 
 LIST_HEAD(track_result_list);
 
 int add_record(struct Record *);
@@ -56,6 +59,7 @@ int find_record_by_title(char *title)
     struct list_head *pos,*n = NULL;
     struct Record *record = NULL;
 
+    /*initialize list by deleting the result from last traverse*/
     list_for_each_safe(pos, n, &record_result_list){
         record = container_of(pos, struct Record, list);
         list_del(&record->list);
@@ -79,13 +83,18 @@ int find_track_by_title(char *title)
 {
     struct list_head *pos,*n = NULL;
     struct Record *record = NULL;
+
+    /*initialize list by deleting the result from last traverse*/
     list_for_each_safe(pos, n, &record_result_list){
         record = container_of(pos, struct Record, list);
         list_del(&record->list);
         free(record);
         record = NULL;
     }
+
     pos,n = NULL;
+
+    /*initialize list by deleting the result from last traverse*/
     list_for_each_safe(pos, n, &track_result_list){
         struct Track *track = container_of(pos, struct Track, list);
         list_del(&track->list);
@@ -100,10 +109,11 @@ int find_track_by_title(char *title)
         list_for_each_safe(pos2, n2, &record->track){
             struct Track *track = container_of(pos2, struct Track, list);
             if(strncmp(title, track->title, sizeof(title)) == 0){
-                Record *r_cpy= (struct Record *)malloc(sizeof(struct Record));
-                memcpy(r_cpy,record,sizeof(record));
+                Record *r_cpy = (struct Record *)malloc(sizeof(struct Record));
+		/*an element cannot belong to two list,so copy one*/
+                memcpy(r_cpy,record,sizeof(struct Record));
                 Track *t_cpy = (struct Track *)malloc(sizeof(struct Track));
-                memcpy(t_cpy,track,sizeof(track));
+                memcpy(t_cpy,track,sizeof(struct Track));
                 list_add(&r_cpy->list, &record_result_list);
                 list_add(&t_cpy->list, &track_result_list);
             }
