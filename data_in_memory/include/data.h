@@ -8,14 +8,18 @@ struct list_head{
 
 typedef struct Track{
     struct list_head list;
-    char title[MAX_LEN];
-    char style[MAX_LEN];
+    //char title[MAX_LEN];
+    char *title;
+    //char style[MAX_LEN];
+    char *style;
 }Track;
 
 typedef struct Record{
     struct list_head list;
-    char title[MAX_LEN];
-    char artist[MAX_LEN];
+    //char title[MAX_LEN];
+    char *title;
+    //char artist[MAX_LEN];
+    char *artist;
     int  track_count;
     struct list_head track;
 }Record;
@@ -27,11 +31,14 @@ typedef struct RecordList{
 
 
 int init_record_list(void);
-int add_record(struct Record *);
-int add_track(struct Record *, struct Track *);
+int add_record(char *title, char *artist, Record *record);
+int add_record_wrap(char *title, char *artist, Record *record);
+int add_track(Record *record, char *title, char *style, Track *track);
+int add_track_wrap(char *rtitle, char *title, char *style, Track *track);
 int remove_record(struct Record *record);
 int remove_track(struct Record *, struct Track *);
-int find_record_by_title(char *title);
-int find_track_by_title(char *title); 
+Record *get_record_by_title(char *title);
+int check_track_by_title(char *title); 
+int get_track_by_title(char *title); 
+Track *get_track_by_title_of_record(Record *record, char *ttitle);
 int display_all_records(void);
-
