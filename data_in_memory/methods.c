@@ -80,7 +80,7 @@ int add_track_wrap(char *rtitle, char *title, char *style, Track *track)
 		return 1;
 
 	if(get_track_by_title_of_record(record,title))
-		return 1;
+		return 0;
 		
 	add_track(record,title,style,track);
 	return 0;
@@ -221,3 +221,46 @@ int display_all_records(void)
 	return 0;
 	
 }
+
+int display_track_of_record(Record *record)
+{
+		
+    struct list_head *pos,*n = NULL;
+	
+	printf("Track%10sStyle%10sRecord\n","","");
+
+	if(list_empty(&record->track))
+		return 1;
+
+    list_for_each_safe(pos, n, &record->track){
+    	struct Track *track = container_of(pos, struct Track, list);
+		printf("%-15s%-15s%s\n",track->title,track->style,record->title);
+    }
+
+	return 0;
+}
+
+
+int get_record_data(char *rtitle, char *rartist)
+{
+	printf("Record Title: ");
+	scanf("%s",rtitle);
+	printf("Record Artist: ");
+	scanf("%s",rartist);
+	return 0;
+}
+
+int get_track_data(char *rtitle, char *ttitle, char *tstyle)
+{
+	printf("Record Title: ");
+	scanf("%s",rtitle);
+
+	printf("Track Title: ");
+	scanf("%s",ttitle);
+
+	printf("Track Style: ");
+	scanf("%s",tstyle);
+	return 0;
+	
+}
+
