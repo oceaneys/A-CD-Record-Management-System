@@ -37,7 +37,9 @@ int getchoice(char *greet, char *choices[])
 			option++;
 		}
 		
-		selected = getchar();
+		do{
+			selected = getchar();
+		}while(selected == '\n');
 
 		option = choices;
 
