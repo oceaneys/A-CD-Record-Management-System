@@ -9,18 +9,29 @@ char *menu[] = {
 	NULL,
 };
 
-int getchoice(char *greet, char *menu[]);
+int getchoice(char *greet, char *menu[], FILE *in, FILE *out);
 
 int main()
 {
 	int choice = 0;
+	FILE *in, *out;
+
+	
+
 	if(!isatty(fileno(stdout))){
-		fprintf(stderr,"You are not a terminal!\n");
+		fprintf(stderr,"You are not a terminal, OK.\n");
+	}
+
+	in = fopen("/dev/tty","r");
+	out = fopen("/dev/tty","w");
+
+	if(!in || !out){
+		fprintf(stderr,"Unable to open /dev/tty\n");
 		exit(1);
 	}
 
 	do{
-		choice = getchoice("Please select an action",menu);
+		choice = getchoice("Please select an action",menu, in, out);
 		printf("You have chosen %c\n",choice);
 	}while(choice != 'q');
 
@@ -28,22 +39,22 @@ int main()
 }
 
 
-int getchoice(char *greet, char *choices[])
+int getchoice(char *greet, char *choices[], FILE *in, FILE *out)
 {
 	int chosen = 0;
 	int selected;
 	char **option;
 
 	do{
-		printf("Choice: %s\n",greet);
+		fprintf(out,"Choice: %s\n",greet);
 		option = choices;
 		while(*option){
-			printf("%s\n",*option);
+			fprintf(out,"%s\n",*option);
 			option++;
 		}
 		
 		do{
-			selected = getchar();
+			selected = fgetc(in);
 		}while(selected == '\n');
 
 		option = choices;
@@ -57,7 +68,7 @@ int getchoice(char *greet, char *choices[])
 		
 		}
 		if(!chosen){
-			printf("Incorrect choice, select again\n");
+			fprintf(out,"Incorrect choice, select again\n");
 		}
 
 	}while(!chosen);
