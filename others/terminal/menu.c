@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 char *menu[] = {
 	"a - add new record",
@@ -13,6 +14,10 @@ int getchoice(char *greet, char *menu[]);
 int main()
 {
 	int choice = 0;
+	if(!isatty(fileno(stdout))){
+		fprintf(stderr,"You are not a terminal!\n");
+		exit(1);
+	}
 
 	do{
 		choice = getchoice("Please select an action",menu);
