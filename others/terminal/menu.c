@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <termios.h>
+#include <term.h>
+#include <curses.h>
 
+static FILE *output_stream = (FILE *)0;
 
 char *menu[] = {
 	"a - add new record",
@@ -12,6 +15,7 @@ char *menu[] = {
 };
 
 int getchoice(char *greet, char *menu[], FILE *in, FILE *out);
+int char_to_terminal(int char_to_write);
 
 int main()
 {
@@ -44,7 +48,8 @@ int main()
 
 	do{
 		choice = getchoice("Please select an action",menu, in, out);
-		printf("You have chosen %c\n",choice);
+		fprintf(out,"You have chosen %c\n",choice);
+		usleep(400000); // sleep for the 'fprintf' above to display info
 	}while(choice != 'q');
 	
 	tcsetattr(fileno(out),TCSANOW, &initial_settings);
@@ -57,20 +62,36 @@ int getchoice(char *greet, char *choices[], FILE *in, FILE *out)
 {
 	int chosen = 0;
 	int selected;
+	int screenrow, screencol = 10;
 	char **option;
+	char *cursor, *clear;
 
+	output_stream = out;
+
+	setupterm(NULL, fileno(out), (int *)0);
+	cursor = tigetstr("cup");
+	clear = tigetstr("clear");
+
+	
 	do{
+		screenrow = 4;
+		tputs(clear, 1, char_to_terminal);
+		tputs(tparm(cursor, screenrow, screencol), 1, char_to_terminal);
 		fprintf(out,"Choice: %s\n",greet);
+		screenrow += 2;
 		option = choices;
 		while(*option){
+			tputs(tparm(cursor, screenrow, screencol), 1, char_to_terminal);
 			fprintf(out,"%s\n",*option);
+			screenrow++;
 			option++;
 		}
-		
-		do{
-			selected = fgetc(in);
-		}while(selected == '\n');
 
+		fprintf(out,"\n");
+
+		fflush(out);
+		tputs(tparm(cursor, screenrow, screencol), 1, char_to_terminal);
+		selected = fgetc(in);
 		option = choices;
 
 		while(*option){
@@ -82,10 +103,20 @@ int getchoice(char *greet, char *choices[], FILE *in, FILE *out)
 		
 		}
 		if(!chosen){
+			tputs(tparm(cursor, screenrow, screencol), 1, char_to_terminal);
 			fprintf(out,"Incorrect choice, select again\n");
+			usleep(400000); // sleep for the 'fprintf' above to display info
 		}
 
 	}while(!chosen);
 
 	return selected;
+}
+
+
+int char_to_terminal(int char_to_terminal)
+{
+	if(output_stream)
+		putc(char_to_terminal, output_stream);
+	return 0;
 }
