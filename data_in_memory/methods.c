@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <curses.h>
 
 #include "data.h"
 #include "list.h"
@@ -14,8 +15,6 @@ RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 /*two global list created for `find_*_by_title`*/
 LIST_HEAD(record_result_list); 
 LIST_HEAD(track_result_list);
-
-
 
 int add_record(char *title, char *artist, Record *record)
 {
@@ -262,5 +261,99 @@ int get_track_data(char *rtitle, char *ttitle, char *tstyle)
 	scanf("%s",tstyle);
 	return 0;
 	
+}
+
+
+void draw_menu(char *choice[], int selected, int start_row, int start_col)
+{
+	char **options;
+	options = choice;
+	char *selected_option;
+	int i = 1;
+
+	init_pair(selected, COLOR_WHITE, COLOR_RED);
+
+	while(*options){
+		if(selected == i){
+			attron(COLOR_PAIR(selected)|A_BOLD);
+			mvprintw(start_row + selected, start_col, "%s", *options);
+			attroff(COLOR_PAIR(selected)|A_BOLD);
+			options++;
+			i++;
+			continue;
+		}
+		mvprintw(start_row + i, start_col, "%s", *options);
+		options++;
+		i++;
+	}
+
+	refresh();
+		
+}
+
+void start_color_mode()
+{
+	
+	if(!has_colors()){
+		endwin();
+		fprintf(stderr, "Error - no color support on this terminal\n");
+		exit(1);
+	}
+
+	if(start_color() != OK){
+		endwin();
+		fprintf(stderr, "Error - could not initialize colors\n");
+		exit(1);
+	}
+
+}
+
+int getchoice(char *greet, char *choice[])
+{
+	
+	int key = 0;
+	int selected = 0;
+	int option_cnt = 0;
+	int start_row = 5, start_col = 10;
+	char **options;
+
+
+	options = choice;
+
+	while(*options){
+		options++;
+		option_cnt++;
+	}
+
+	selected = option_cnt;
+	
+	noecho();
+	cbreak();
+
+	mvprintw(start_row - 2,start_col,"%s",greet);
+	
+	keypad(stdscr, TRUE);
+
+	while(key != ERR && key != KEY_ENTER ){
+
+		if( key == KEY_DOWN && selected < option_cnt){
+
+			selected++;
+		}
+
+		if( key == KEY_UP && selected > 1){
+		
+			selected--;
+		}
+		
+		draw_menu(choice, selected, start_row, start_col);
+		key = getch();
+	}
+
+	echo();
+	nocbreak();
+
+	return choice[selected-1][0]; 
+
 }
 

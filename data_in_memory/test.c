@@ -8,44 +8,42 @@
 
 #include "data.h"
 
+char *menu[] = {
+	"a - add new record",
+	"d - delete a record",
+	"f - find a record",
+	"q - quit",
+	NULL,
+};
+
 int main(int argc, char **argv)
 {
 
-	char rtitle[20],rartist[20];
-	char ttitle[20],tstyle[20];
-	char arg = argv[1][0];
-	int ret = 0;
-	Record *record = (struct Record *)malloc(sizeof(struct Record));
-	Track *track = (struct Track *)malloc(sizeof(struct Track));
+	int choice = 0;
+	initscr();
 
-	switch(arg){
-		case 'r':	
-					get_record_data(rtitle,rartist);
-					if((ret=add_record_wrap(rtitle,rartist,record)) == 0)
-						printf("add record, done.\n");
-					else
-						printf("%s exsits.\n",rtitle);
-				  	break;
+	start_color_mode();
 
-		case 't': 
-					get_record_data(rtitle,rartist);
-					add_record_wrap(rtitle,rartist,record);
-					printf("add record, done.\n");
+	do{
+		choice = getchoice("Options:", menu);
+		switch(choice){
+			case 'q':
+				break;
+			case 'a':
+				mvprintw(20,10,"add new record");
+				break;
+			case 'd':
+				mvprintw(20,10,"delete a record");
+				break;
+			case 'f':
+				mvprintw(20,10,"find a record");
+				break;
+				
+			}
+		}while(choice != 'q');
 
-					get_track_data(rtitle,ttitle,tstyle);
-					if((ret=add_track_wrap(rtitle,ttitle,tstyle,track)) == 0)
-						printf("add track, done.\n");
-					else
-						printf("%s not exsit, go to (1) first.\n",rtitle); 
-
-					display_track_of_record(record);
-
-				  	break;
-
-		default: printf("nothing\n");
-				 break;
-	}
+	endwin();
+	exit(EXIT_SUCCESS);
 
 
-    return 0;
 }
