@@ -10,8 +10,10 @@
 
 char *menu[] = {
 	"a - add new record",
-	"d - delete a record",
+	"r - remove a record",
 	"f - find a record",
+	"l - list the tracks of a record",
+	"d - display all the records",
 	"q - quit",
 	NULL,
 };
@@ -25,19 +27,28 @@ int main(int argc, char **argv)
 	start_color_mode();
 
 	do{
+
+		Record *record = (struct Record *)malloc(sizeof(struct Record));
+		
 		choice = getchoice("Options:", menu);
 		switch(choice){
 			case 'q':
-				break;
+					break;
 			case 'a':
-				mvprintw(20,10,"add new record");
-				break;
-			case 'd':
-				mvprintw(20,10,"delete a record");
-				break;
+					add_record_ui(record);
+				  	break;
+			case 'r':
+					remove_record_ui();
+					break;
 			case 'f':
-				mvprintw(20,10,"find a record");
-				break;
+					find_record_ui();
+					break;
+			case 'l':
+					list_track_ui();
+					break;
+			case 'd':
+					display_all_records_ui();
+					break;
 				
 			}
 		}while(choice != 'q');

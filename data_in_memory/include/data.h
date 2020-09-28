@@ -8,18 +8,14 @@ struct list_head{
 
 typedef struct Track{
     struct list_head list;
-    //char title[MAX_LEN];
-    char *title;
-    //char style[MAX_LEN];
-    char *style;
+    char title[MAX_LEN];
+    char style[MAX_LEN];
 }Track;
 
 typedef struct Record{
     struct list_head list;
-    //char title[MAX_LEN];
-    char *title;
-    //char artist[MAX_LEN];
-    char *artist;
+    char title[MAX_LEN];
+    char artist[MAX_LEN];
     int  track_count;
     struct list_head track;
 }Record;
