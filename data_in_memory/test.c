@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "data.h"
 
 char *menu[] = {
 	"a - add new record",
@@ -27,15 +26,12 @@ int main(int argc, char **argv)
 	start_color_mode();
 
 	do{
-
-		Record *record = (struct Record *)malloc(sizeof(struct Record));
-		
 		choice = getchoice("Options:", menu);
 		switch(choice){
 			case 'q':
 					break;
 			case 'a':
-					add_record_ui(record);
+					add_record_ui();
 				  	break;
 			case 'r':
 					remove_record_ui();

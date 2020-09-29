@@ -49,10 +49,12 @@ int add_record_wrap(char *title, char *artist, Record *record)
 	return 0;
 }
 
-void add_record_ui(Record *record)
+void add_record_ui()
 {
 	char title[MAX_LEN] = {0};
 	char artist[MAX_LEN] = {0};
+	Record *record = NULL;
+	record = (struct Record *)malloc(sizeof(struct Record));
 
 	int start_row = 5, start_col = 10;
 	int ret = 0;
@@ -467,7 +469,7 @@ int getchoice(char *greet, char *choice[])
 {
 	
 	int key = 0;
-	int selected = 0;
+	int selected = 1;
 	int option_cnt = 0;
 	int start_row = 5, start_col = 10;
 	char **options;
@@ -479,8 +481,6 @@ int getchoice(char *greet, char *choice[])
 		options++;
 		option_cnt++;
 	}
-
-	selected = option_cnt;
 	
 	clear();
 
@@ -493,14 +493,18 @@ int getchoice(char *greet, char *choice[])
 
 	while(key != ERR && key != 10 ){
 
-		if( key == KEY_DOWN && selected < option_cnt){
-
-			selected++;
+		if( key == KEY_DOWN){
+			if(selected == option_cnt)
+				selected = 1;
+			else
+				selected++;
 		}
 
-		if( key == KEY_UP && selected > 1){
-		
-			selected--;
+		if( key == KEY_UP){
+			if(selected == 1)
+				selected = option_cnt;
+			else 
+				selected--;
 		}
 		
 		draw_menu(choice, selected, start_row, start_col);
