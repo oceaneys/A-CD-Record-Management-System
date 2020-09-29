@@ -6,17 +6,51 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "data.h"
+
+char *menu[] = {
+	"a - add new record",
+	"r - remove a record",
+	"f - find a record",
+	"l - list the tracks of a record",
+	"d - display all the records",
+	"q - quit",
+	NULL,
+};
 
 int main(int argc, char **argv)
 {
-	char *rtitle1 = "rtitle1";
-	char *rartist1 = "rartist1";
-	Record *record1 = NULL;
-	record1 = (struct Record *)malloc(sizeof(struct Record));
-	add_record_wrap(rtitle1,rartist1,record1);
 
-	display_all_records();
+	int choice = 0;
+	initscr();
 
-    return 0;
+	start_color_mode();
+
+	do{
+		choice = getchoice("Options:", menu);
+		switch(choice){
+			case 'q':
+					break;
+			case 'a':
+					add_record_ui();
+				  	break;
+			case 'r':
+					remove_record_ui();
+					break;
+			case 'f':
+					find_record_ui();
+					break;
+			case 'l':
+					list_track_ui();
+					break;
+			case 'd':
+					display_all_records_ui();
+					break;
+				
+			}
+		}while(choice != 'q');
+
+	endwin();
+	exit(EXIT_SUCCESS);
+
+
 }
