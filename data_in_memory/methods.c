@@ -7,8 +7,8 @@
 #include <fcntl.h>
 #include <curses.h>
 
-#include "data.h"
-#include "list.h"
+#include "include/data.h"
+#include "include/list.h"
 
 RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 
@@ -16,8 +16,22 @@ RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 LIST_HEAD(record_result_list); 
 LIST_HEAD(track_result_list);
 
-int add_record(char *title, char *artist, Record *record)
+int add_record(Record *record)
 {
+
+	record_list.record_cnt += 1; 
+	list_add_tail(&record->list,&record_list.list);
+	return 0;
+} 
+
+
+int add_record_wrap(char *title, char *artist, Record *record)
+{
+
+	if(get_record_by_title(title)){
+		return 1;
+	}
+
 	*record = (struct Record){ 
 	    .track=LIST_HEAD_INIT(record->track),
 	    .list=LIST_HEAD_INIT(record->list)
@@ -26,26 +40,7 @@ int add_record(char *title, char *artist, Record *record)
 	strncpy(record->artist,artist,sizeof(artist));
 	record->track_count = 0;
 
-	record_list.record_cnt += 1; 
-	list_add_tail(&record->list,&record_list.list);
-	return 0;
-} 
-
-/*
-int add_record(Record *record)
-{
-   record_list.record_cnt += 1; 
-   list_add_tail(&record->list,&record_list.list);
-   return 0;
-}
-*/
-
-int add_record_wrap(char *title, char *artist, Record *record)
-{
-	if(get_record_by_title(title)){
-		return 1;
-	}
-	add_record(title,artist,record);
+	add_record(record);
 	return 0;
 }
 
@@ -70,13 +65,16 @@ void add_record_ui()
 	getstr(artist);
 
 
-	if((ret=add_record_wrap(title,artist,record)) == 0)
+	if((ret=add_record_wrap(title,artist,record)) == 0){
+		strncpy(current_cd, title, sizeof(title));
 		mvprintw(start_row + 3,start_col, "%s added.",title);
+	}
 	else
 		mvprintw(start_row + 3,start_col, "%s exsits.",title);
 
 	refresh();
 	sleep(1);
+
 	
 }
 	
@@ -124,13 +122,8 @@ void remove_record_ui()
 }
 
 
-int add_track(Record *record, char *title, char *style, Track *track)
+int add_track(Record *record, Track *track)
 {
-	*track = (struct Track){
-	    .list = LIST_HEAD_INIT(track->list)
-	};
-	strncpy(track->title,title,sizeof(title));
-	strncpy(track->style,style,sizeof(style));
 
 	record->track_count += 1;
 	list_add_tail(&track->list,&record->track);
@@ -144,21 +137,18 @@ int add_track_wrap(char *rtitle, char *title, char *style, Track *track)
 	if(NULL == record)
 		return 1;
 
+	*track = (struct Track){
+	    .list = LIST_HEAD_INIT(track->list)
+	};
+	strncpy(track->title,title,sizeof(title));
+	strncpy(track->style,style,sizeof(style));
+
 	if(get_track_by_title_of_record(record,title))
 		return 0;
 		
-	add_track(record,title,style,track);
+	add_track(record,track);
 	return 0;
 }
-
-/*
-int add_track(Record *record, Track *track)
-{
-   record->track_count += 1;
-   list_add_tail(&track->list,&record->track);
-   return 0;
-}
-*/
 
 int remove_track(Record *record,Track *track)
 {
@@ -420,8 +410,7 @@ int get_track_data(char *rtitle, char *ttitle, char *tstyle)
 	
 }
 
-
-void draw_menu(char *choice[], int selected, int start_row, int start_col)
+void draw_menu_color(char *choice[], int selected, int start_row, int start_col)
 {
 	char **options;
 	options = choice;
@@ -435,6 +424,31 @@ void draw_menu(char *choice[], int selected, int start_row, int start_col)
 			attron(COLOR_PAIR(selected)|A_BOLD);
 			mvprintw(start_row + selected, start_col, "%s", *options);
 			attroff(COLOR_PAIR(selected)|A_BOLD);
+			options++;
+			i++;
+			continue;
+		}
+		mvprintw(start_row + i, start_col, "%s", *options);
+		options++;
+		i++;
+	}
+
+	refresh();
+		
+}
+
+void draw_menu(char *choice[], int selected, int start_row, int start_col)
+{
+	char **options;
+	options = choice;
+	char *selected_option;
+	int i = 1;
+
+	while(*options){
+		if(selected == i){
+			attron(A_BOLD|A_STANDOUT);
+			mvprintw(start_row + selected, start_col, "%s", *options);
+			attroff(A_BOLD|A_STANDOUT);
 			options++;
 			i++;
 			continue;

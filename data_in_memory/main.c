@@ -6,14 +6,25 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "include/data.h"
 
-char *menu[] = {
-	"a - add new record",
-	"r - remove a record",
-	"f - find a record",
-	"l - list the tracks of a record",
-	"d - display all the records",
-	"q - quit",
+char *main_menu[] = {
+	"add new record",
+	"find a record",
+	"display all the records",
+	"quit",
+	NULL,
+
+};
+
+char *extend_menu[] = {
+	"add new record",
+	"find a record",
+	"display all the records",
+	"remove current record",
+	"list tracks on current record",
+	"update track information on current record",
+	"quit",
 	NULL,
 };
 
@@ -23,10 +34,10 @@ int main(int argc, char **argv)
 	int choice = 0;
 	initscr();
 
-	start_color_mode();
+	//start_color_mode();
 
 	do{
-		choice = getchoice("Options:", menu);
+		choice = getchoice("Options:",current_cd[0] ? extend_menu : main_menu);
 		switch(choice){
 			case 'q':
 					break;

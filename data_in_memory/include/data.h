@@ -2,6 +2,8 @@
 
 /*simple doubly linked list implementation.*/
 
+char current_cd[MAX_LEN];
+
 struct list_head{
     struct list_head *prev,*next;
 };
@@ -26,15 +28,22 @@ typedef struct RecordList{
 }RecordList;
 
 
-int init_record_list(void);
-int add_record(char *title, char *artist, Record *record);
+void add_record_ui();
+void remove_record_ui();
+void find_record_ui();
+void list_record_ui();
+void diaplay_all_records_ui();
+
+int add_record(Record *record);
 int add_record_wrap(char *title, char *artist, Record *record);
-int add_track(Record *record, char *title, char *style, Track *track);
-int add_track_wrap(char *rtitle, char *title, char *style, Track *track);
 int remove_record(struct Record *record);
-int remove_track(struct Record *, struct Track *);
 Record *get_record_by_title(char *title);
+int display_all_records(void);
+
+int add_track(Record *record, Track *track);
+int add_track_wrap(char *rtitle, char *title, char *style, Track *track);
+int remove_track(struct Record *, struct Track *);
 int check_track_by_title(char *title); 
 int get_track_by_title(char *title); 
 Track *get_track_by_title_of_record(Record *record, char *ttitle);
-int display_all_records(void);
+
