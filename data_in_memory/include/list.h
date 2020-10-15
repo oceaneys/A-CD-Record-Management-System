@@ -22,6 +22,8 @@
 #define list_del(elm) do {           \
     (elm)->next->prev = (elm)->prev; \
     (elm)->prev->next = (elm)->next; \
+    (elm)->next = NULL; 			\
+    (elm)->prev = NULL; 			\
 }while(0)
 
 #define list_empty(head) ((head)->next == (head))

@@ -47,3 +47,8 @@ int check_track_by_title(char *title);
 int get_track_by_title(char *title); 
 Track *get_track_by_title_of_record(Record *record, char *ttitle);
 
+
+void get_return();
+void clear_all_screen();
+
+

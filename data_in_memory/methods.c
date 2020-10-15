@@ -10,6 +10,12 @@
 #include "include/data.h"
 #include "include/list.h"
 
+
+#define MSG_LINE 6 /*Misc. message on this line*/
+#define ERROR_LINE 22 /*Line to use for errors*/
+#define Q_LINE 20 /*Line for questions*/
+#define PROMPT_LINE 18 /*Line for prompting on*/
+
 RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 
 /*two global list created for `find_*_by_title`*/
@@ -48,15 +54,16 @@ void add_record_ui()
 {
 	char title[MAX_LEN] = {0};
 	char artist[MAX_LEN] = {0};
+	char cd_entry[MAX_LEN] = {0};
 	Record *record = NULL;
 	record = (struct Record *)malloc(sizeof(struct Record));
 
-	int start_row = 5, start_col = 10;
+	int start_row = MSG_LINE, start_col = 10;
 	int ret = 0;
 
 	clear();
 
-	mvprintw(start_row - 2, start_col,"%s","Record Info Input:");
+	mvprintw(start_row - 2, start_col,"%s","Enter new record details:");
 
 	mvprintw(start_row, start_col, "%s","Record Title:");
 	getstr(title);
@@ -65,16 +72,23 @@ void add_record_ui()
 	getstr(artist);
 
 
-	if((ret=add_record_wrap(title,artist,record)) == 0){
-		strncpy(current_cd, title, sizeof(title));
-		mvprintw(start_row + 3,start_col, "%s added.",title);
-	}
-	else
-		mvprintw(start_row + 3,start_col, "%s exsits.",title);
+	mvprintw(PROMPT_LINE - 2, start_col, "About to add this new entry:");
+	sprintf(cd_entry, "%s, %s",title, artist);
+	mvprintw(PROMPT_LINE, 10, "%s", cd_entry);
 
 	refresh();
-	sleep(1);
 
+	if(get_confirm()){
+		ret=add_record_wrap(title,artist,record);
+		if(ret == 0){
+			strncpy(current_cd, title, sizeof(title));
+		}else{
+			mvprintw(Q_LINE,start_col, "%s exsits.",title);
+			clrtoeol(); /*delete chars behind 'exsits'*/
+			refresh();
+			sleep(1);
+		}
+	}
 	
 }
 	
@@ -94,31 +108,33 @@ int remove_record_wrap(char *title)
 	if(NULL == record)
 		return 1;
 	remove_record(record);
+	free(record);
 	return 0;
 }	
 
 void remove_record_ui()
 {
 	
-	int start_row = 5, start_col = 10;
 	int ret = 0;
 	char title[MAX_LEN] = {0};
 
-	clear();
+	mvprintw(PROMPT_LINE, 0, "About to remove Record: %s", current_cd);
 
-	mvprintw(start_row - 2, start_col,"%s","Remove a Record: ");
+	if(!get_confirm())
+		return;
 
-	mvprintw(start_row, start_col, "%s","Record Title:");
-	getstr(title);
+	strncpy(title,current_cd,sizeof(title));
 
-	if((ret=remove_record_wrap(title)) == 0)
-		mvprintw(start_row + 3,start_col, "remove record, done.");
-	else
-		mvprintw(start_row + 3,start_col, "%s not exsits.\n",title);
-
+	ret = remove_record_wrap(title);
+	if(ret == 1){ 
+		mvprintw(ERROR_LINE, 0, "Failed");
+		clrtoeol();
+		refresh();
+		sleep(1);
+	}
+		
+	current_cd[0] = '\0';
 	refresh();
-
-	sleep(1);
 }
 
 
@@ -166,7 +182,7 @@ Record *get_record_by_title(char *title)
 
     list_for_each_safe(pos, n, &record_list.list){
         record = container_of(pos, struct Record, list);
-        if(strncmp(title,record->title,sizeof(title)) == 0){
+        if(strncmp(title,record->title,sizeof(record->title)) == 0){
 			return record;
         }
     }
@@ -178,25 +194,28 @@ Record *get_record_by_title(char *title)
 void find_record_ui()
 {
 		
-	int start_row = 5, start_col = 10;
 	Record *record = NULL;
 	char title[MAX_LEN] = {0};
 
-	clear();
-
-	mvprintw(start_row - 2, start_col,"%s","Find a Record:");
-
-	mvprintw(start_row, start_col, "%s","Record Title:");
+	mvprintw(Q_LINE, 0,"%s","Enter the title to search for:");
 	getstr(title);
 
+	refresh();
+
 	record = get_record_by_title(title);
-	if(NULL != record)
-		mvprintw(start_row + 2, start_col, "Record %s, Found.",title);	
-	else
-		mvprintw(start_row + 2, start_col, "Record %s Not exsit.", title);
+
+	if(NULL != record){
+
+		strncpy(current_cd, title, sizeof(title));
+
+	} else{
+
+		mvprintw(ERROR_LINE, 0, "Sorry, no matching record found. ", title);
+		get_return();
+	}
 
 	refresh();
-	sleep(1);
+
 }
 
 
@@ -432,8 +451,9 @@ void draw_menu_color(char *choice[], int selected, int start_row, int start_col)
 		options++;
 		i++;
 	}
-
+	mvprintw(start_row + i + 3, start_col, "Move highlight then press Return ");
 	refresh();
+
 		
 }
 
@@ -458,10 +478,55 @@ void draw_menu(char *choice[], int selected, int start_row, int start_col)
 		i++;
 	}
 
+	mvprintw(start_row + i + 3, start_col, "Move highlight then press Return ");
 	refresh();
 		
 }
 
+
+int get_confirm()
+{
+	char in;
+	int confirmed = 0;
+	mvprintw(Q_LINE, 10, "Are you sure? ");
+	clrtoeol();
+	refresh();
+
+	noecho();
+	cbreak();
+	in = getch();
+	if(in == 'y' || in == 'Y'){
+		confirmed = 1;
+	}
+
+	nocbreak();
+
+	if(!confirmed){
+		mvprintw(Q_LINE, 10, "Cancelled");
+		clrtoeol();
+		refresh();
+		sleep(1);
+	}
+
+
+	return confirmed;
+
+}
+
+void clear_all_screen()
+{
+	clear();
+	mvprintw(2, 20, "CD Database Application");
+	if(current_cd[0]){
+		mvprintw(ERROR_LINE, 0, "Current Record: %s\n",current_cd);
+	}
+	refresh();
+}
+
+
+
+
+/*curse color mode*/
 void start_color_mode()
 {
 	
@@ -496,7 +561,7 @@ int getchoice(char *greet, char *choice[])
 		option_cnt++;
 	}
 	
-	clear();
+	clear_all_screen();
 
 	noecho();
 	cbreak();
@@ -525,6 +590,7 @@ int getchoice(char *greet, char *choice[])
 		key = getch();
 	}
 
+	keypad(stdscr,FALSE);
 	echo();
 	nocbreak();
 
@@ -532,3 +598,10 @@ int getchoice(char *greet, char *choice[])
 
 }
 
+void get_return()
+{
+	int ch;
+	mvprintw(ERROR_LINE + 1, 0, "Press return ");
+	refresh();
+	while((ch = getchar()) != '\n' && ch != EOF);
+}
