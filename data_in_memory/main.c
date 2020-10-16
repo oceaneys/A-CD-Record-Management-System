@@ -56,6 +56,9 @@ int main(int argc, char **argv)
 			case 'd':
 					display_all_records_ui();
 					break;
+			case 'u':
+					add_track_ui();
+					break;
 				
 			}
 		}while(choice != 'q');

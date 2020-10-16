@@ -41,7 +41,7 @@ Record *get_record_by_title(char *title);
 int display_all_records(void);
 
 int add_track(Record *record, Track *track);
-int add_track_wrap(char *rtitle, char *title, char *style, Track *track);
+int add_track_wrap(char *rtitle, char *title, char *style);
 int remove_track(struct Record *, struct Track *);
 int check_track_by_title(char *title); 
 int get_track_by_title(char *title); 

@@ -22,6 +22,8 @@ RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 LIST_HEAD(record_result_list); 
 LIST_HEAD(track_result_list);
 
+/*Beginning of add record*/
+
 int add_record(Record *record)
 {
 
@@ -91,7 +93,11 @@ void add_record_ui()
 	}
 	
 }
+
+/* Ending of add record*/
+
 	
+/*Beginning of remove record*/
 int remove_record(Record *record)
 {
     if(record_list.record_cnt)
@@ -137,7 +143,10 @@ void remove_record_ui()
 	refresh();
 }
 
+/*Ending of remove record*/
 
+
+/*Beginning of add track*/
 int add_track(Record *record, Track *track)
 {
 
@@ -146,24 +155,91 @@ int add_track(Record *record, Track *track)
 	return 0;
 }
 
-int add_track_wrap(char *rtitle, char *title, char *style, Track *track)
-{
+int add_track_wrap(char *rtitle, char *title, char *style) {
+
+	if(!rtitle){
+		rtitle = (char *)malloc(MAX_LEN * sizeof(char));
+		strncpy(rtitle,current_cd,sizeof(current_cd));
+	}	
 	
 	Record *record = get_record_by_title(rtitle);
 	if(NULL == record)
 		return 1;
 
+	Track *track = (struct Track *)malloc(sizeof(struct Track));
 	*track = (struct Track){
 	    .list = LIST_HEAD_INIT(track->list)
 	};
 	strncpy(track->title,title,sizeof(title));
 	strncpy(track->style,style,sizeof(style));
-
-	if(get_track_by_title_of_record(record,title))
-		return 0;
-		
+	
 	add_track(record,track);
 	return 0;
+}
+
+/*
+  Some defines we use only for showing or entering the track information
+ */
+#define BOXED_ROWS    11
+#define BOXED_COLS    60
+#define BOX_ROW_POS   8
+#define BOX_COL_POS    2
+
+int add_track_ui()
+{
+
+	WINDOW *box_win_ptr;
+	WINDOW *sub_win_ptr;
+	char title[MAX_LEN];
+	int screen_row = 1;
+	int track = 1;
+
+
+	mvprintw(PROMPT_LINE, 0, "Re-entering tracks for record. ");
+	if(!get_confirm())
+		return 1;
+
+	remove_all_tracks_of_one_record(NULL);
+
+	clear_all_screen();
+	mvprintw(MSG_LINE,0,"Enter a blank line to finish");
+	refresh();
+
+	box_win_ptr = subwin(stdscr, BOXED_ROWS + 2, BOXED_COLS + 2, BOX_ROW_POS - 1, BOX_COL_POS - 1);
+	if(!box_win_ptr)
+		return 1;
+	box(box_win_ptr, ACS_VLINE, ACS_HLINE);
+	touchwin(box_win_ptr);
+	wrefresh(box_win_ptr);
+
+	sub_win_ptr = subwin(stdscr, BOXED_ROWS, BOXED_COLS, BOX_ROW_POS, BOX_COL_POS); 
+	if(!sub_win_ptr)
+		return 1;
+
+	scrollok(sub_win_ptr,TRUE);
+
+	do{
+		mvwprintw(sub_win_ptr, screen_row++, BOX_COL_POS + 2, "Track %d: ",track++);	
+		clrtoeol();
+		wgetnstr(sub_win_ptr, title, MAX_LEN);
+
+		if(*title){
+			int ret = add_track_wrap(NULL, title, "jazz");
+			if(ret == 1 ){
+				mvprintw(ERROR_LINE, 0, "Failed");
+				clrtoeol();
+				refresh();
+				get_return();
+			}
+		}
+
+		if(screen_row > BOXED_ROWS-2){
+			scroll(sub_win_ptr);
+			screen_row--;
+		}
+	
+	}while(*title);
+
 }
 
 int remove_track(Record *record,Track *track)
@@ -172,6 +248,27 @@ int remove_track(Record *record,Track *track)
         record->track_count -= 1;
     list_del(&track->list);
     return 0; 
+	
+}
+
+int remove_all_tracks_of_one_record(char *rtitle)
+{
+	if(!rtitle){
+		rtitle = (char *)malloc(MAX_LEN * sizeof(char));
+		strncpy(rtitle, current_cd, sizeof(current_cd));
+	}
+
+	Record *record = get_record_by_title(rtitle);
+	if(record == NULL)
+		return 1;
+
+	struct list_head *pos,*n = NULL;
+    list_for_each_safe(pos, n, &record->track){
+        Track *track = container_of(pos, struct Track, list);
+		remove_track(record,track);
+	}
+
+	return 0;
 	
 }
 
@@ -312,38 +409,54 @@ void list_track_by_title_of_record_ui(int start_row, int start_col, Record *reco
 	if(list_empty(&record->track)){
 		mvprintw(start_row + row_pos, start_col, "%s has no tracks.", record->title);
 		refresh();
-		sleep(2);
+		get_return();
 		return;
 	}
 	
+	mvprintw(start_row, start_col, "%s%s","Record Title: ",record->title);
+	mvprintw(start_row + 1, start_col, "Track Counts: %d",record->track_count);
+
+	mvprintw(start_row + 3 , start_col+1, "Track%12sStyle\n"," ");
+
 	list_for_each_safe(pos, n, &record->track){
 		struct Track *track = container_of(pos, struct Track, list);
-		mvprintw(start_row + row_pos, start_col, "Track-%d: %s", row_pos,track->title);
+		mvprintw(start_row + 3 + row_pos, start_col+1, "%-17s%s",track->title,track->style);
 		row_pos++;
 	}
 
 	refresh();
-	sleep(2);
+	get_return();
 
 }
 
 
-void list_track_ui()
+void list_track_ui_ver1(int start_row, int start_col)
 {
-	int start_row = 5, start_col = 10;
-	int try = 3;
+		
+	Record *record = NULL;
+	clear_all_screen();
+	mvprintw(start_row - 2, start_col,"%s","Track list of current Record:");
+	record = get_record_by_title(current_cd);
+	if(NULL == record){
+		mvprintw(start_row + 2, start_col, "%s not exsit, choose another record.", current_cd);
+	}
+	list_track_by_title_of_record_ui(start_row, start_col, record); 
+}
 
+
+void list_track_ui_ver2(int start_row, int start_col)
+{
+
+	int try = 3;
 	Record *record = NULL;
 	char title[MAX_LEN] = {0};
 
 
 	while(try){
-
-
-		clear();
-		mvprintw(start_row - 2, start_col,"%s","List Tracks of one Record:");
-
+		clear_all_screen();
+		mvprintw(start_row - 2, start_col,"%s","Track list of seraching Record:");
 		mvprintw(start_row, start_col, "%s","Record Title:");
+
 		getstr(title);
 	
 		record = get_record_by_title(title);
@@ -368,9 +481,22 @@ void list_track_ui()
 		return;
 	}
 	
-	list_track_by_title_of_record_ui(start_row + 2, start_col, record); 
+	list_track_by_title_of_record_ui(start_row + 1, start_col, record); 
 	
 }
+
+void list_track_ui()
+{
+	int start_row = 8, start_col = 10;
+	if(current_cd[0]){
+		list_track_ui_ver1(start_row, start_col);
+	}else{
+		list_track_ui_ver2(start_row, start_col);
+	}
+	
+}
+
+
 
 void display_all_records_ui(void)
 {
@@ -391,7 +517,7 @@ void display_all_records_ui(void)
     }
 
 	refresh();
-	sleep(2);
+	get_return();
 	
 }
 
@@ -492,7 +618,6 @@ int get_confirm()
 	clrtoeol();
 	refresh();
 
-	noecho();
 	cbreak();
 	in = getch();
 	if(in == 'y' || in == 'Y'){
