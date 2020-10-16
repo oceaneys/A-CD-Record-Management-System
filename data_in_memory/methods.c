@@ -266,6 +266,7 @@ int remove_all_tracks_of_one_record(char *rtitle)
     list_for_each_safe(pos, n, &record->track){
         Track *track = container_of(pos, struct Track, list);
 		remove_track(record,track);
+		free(track);
 	}
 
 	return 0;
