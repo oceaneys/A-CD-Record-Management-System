@@ -1,21 +1,21 @@
 all: application
 
 INCLUDE=
-LIBS=-lncurses
+LIBS=-lncurses -lgdbm_compat -lgdbm
 
 CFLAGS=
 
-view.o: view.c main.o
+view.o: view.c
 	gcc $(CFLAGS) -c view.c
 
-methods.o: methods.c 
-	gcc $(CFLAGS) -c methods.c
+access.o: access.c 
+	gcc $(CFLAGS) -c access.c
 
 main.o: main.c
 	gcc $(CFLAGS) -c main.c
 
-application: view.o methods.o main.o
-	gcc $(CFLAGS) -o application view.o methods.o main.o $(LIBS)
+application: view.o access.o main.o
+	gcc $(CFLAGS) -o application view.o access.o main.o $(LIBS)
 
 clean:
 	rm -f application *.o
