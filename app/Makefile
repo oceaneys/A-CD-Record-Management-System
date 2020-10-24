@@ -19,3 +19,6 @@ application: view.o access.o main.o
 
 clean:
 	rm -f application *.o
+
+rmdb:
+	rm -f *.pag *.dir
