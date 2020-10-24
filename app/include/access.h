@@ -10,6 +10,13 @@ struct list_head{
     struct list_head *prev,*next;
 };
 
+typedef enum Bool 
+{
+	False = 0,
+	True = 1
+
+}Bool;
+
 typedef struct Track{
     struct list_head list;
     char title[MAX_LEN];
@@ -33,6 +40,7 @@ int add_record_wrap(char *, char *);
 int remove_record_wrap(char *);
 Record *get_record_by_title(char *title);
 void display_all_records(int, int);
+Bool record_exsits(char *);
 
 int list_track_by_title_of_record(int, int, char *);
 int add_track_wrap(char *rtitle, char *title, char *style);

@@ -15,12 +15,6 @@ RecordList record_list={0,LIST_HEAD_INIT(record_list.list)};
 LIST_HEAD(record_result_list);
 LIST_HEAD(track_result_list);
 
-typedef enum Bool 
-{
-	False = 0,
-	True = 1
-
-}Bool;
 
 #define RECORD_DB_FILE_BASE  "record_db"
 #define RECORD_DB_FILE_DIR  "record_db.dir"
@@ -33,7 +27,6 @@ typedef enum Bool
 static DBM *record_db_ptr = NULL;
 static DBM *track_db_ptr = NULL;
 
-static Bool record_exsits(char *);
 static int remove_record_db(char *);
 static int add_record_db(Record *);
 
@@ -72,7 +65,7 @@ void db_close()
 }
 
 
-static Bool record_exsits(char *title)
+Bool record_exsits(char *title)
 {
 	datum ret,key;
 	key.dptr = (void *)title;
