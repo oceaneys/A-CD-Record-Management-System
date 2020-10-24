@@ -277,7 +277,7 @@ void find_record_ui()
 
 	refresh();
 
-	if(get_record_by_title(title)){
+	if(record_exsits(title)){
 		fulfill_current_cd(title);
 	} else{
 		mvprintw(ERROR_LINE, 0, "Sorry, no matching record found. ", title);
