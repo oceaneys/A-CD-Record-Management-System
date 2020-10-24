@@ -33,7 +33,9 @@ typedef enum Bool
 static DBM *record_db_ptr = NULL;
 static DBM *track_db_ptr = NULL;
 
-static bool record_exsits(char *);
+static Bool record_exsits(char *);
+static int remove_record_db(char *);
+static int add_record_db(Record *);
 
 int db_initialize(int new_database)
 {
@@ -70,11 +72,11 @@ void db_close()
 }
 
 
-static bool record_exsits(char *title)
+static Bool record_exsits(char *title)
 {
 	datum ret,key;
 	key.dptr = (void *)title;
-	key.dsize = sizeof(title);
+	key.dsize = strlen(title);
 	ret = dbm_fetch(record_db_ptr, key);
 	if(ret.dptr) return True;
 	return False;
@@ -94,7 +96,7 @@ static int add_record_db(Record *record)
 	strcpy(key_to_add, record->title);
 
 	local_key_datum.dptr = (void *)key_to_add;
-	local_key_datum.dsize = sizeof(key_to_add);
+	local_key_datum.dsize = strlen(key_to_add);
 	local_data_datum.dptr = (void *)record;
 	local_data_datum.dsize = sizeof(struct Record);
 
@@ -128,24 +130,25 @@ int add_record_wrap(char *title, char *artist)
 /* Ending of add record*/
 
 /*Beginning of remove record*/
-static int remove_record(Record *record)
+static int remove_record_db(char *title)
 {
-    if(record_list.record_cnt)
-        record_list.record_cnt -= 1;
-
-    list_del(&record->list);
+	int ret;
+	datum key;
+	key.dptr = (void *)title;
+	key.dsize = strlen(title);
+	ret = dbm_delete(record_db_ptr,key);
+	if(ret != 0)
+		return 1;
     return 0;
 }
 
 int remove_record_wrap(char *title)
 {
-	Record *record = NULL;
-	record = get_record_by_title(title);
-	if(NULL == record)
+	int ret;
+	if(!record_exsits(title))
 		return 1;
-	remove_record(record);
-	free(record);
-	return 0;
+	ret = remove_record_db(title);
+	return ret;
 }	
 
 
@@ -353,14 +356,20 @@ int list_track_by_title_of_record(int start_row, int start_col, char *rtitle)
 
 void display_all_records(int start_row, int start_col)
 {
+	datum key;
+	datum data;
 	int row_pos = 1;
-    struct list_head *pos,*n = NULL;
 
 	mvprintw(start_row - 2, start_col,"%s","Display all Records:");
-
 	mvprintw(start_row, start_col, "Record%10sArtist%10sTrack Counts\n","","");
-    list_for_each_safe(pos, n, &record_list.list){
-    	struct Record *record = container_of(pos, struct Record, list);
+
+	Record *record = NULL;
+
+	for(key = dbm_firstkey(record_db_ptr); key.dptr; key = dbm_nextkey(record_db_ptr)){
+		data = dbm_fetch(record_db_ptr,key);	
+		if(!data.dptr)
+			continue;
+		record = (Record *)data.dptr;
 		mvprintw(start_row + row_pos, start_col,"%-16s%-16s%d\n",record->title,record->artist,record->track_count);
 		row_pos++;
     }
