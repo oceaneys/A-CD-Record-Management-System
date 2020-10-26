@@ -256,6 +256,8 @@ void remove_record_ui()
 	if(!get_confirm())
 		return;
 
+	remove_all_tracks_of_one_record(get_current_cd());
+
 	ret = remove_record_wrap(get_current_cd());
 	if(ret == 1){ 
 		mvprintw(ERROR_LINE, 0, "Failed");
@@ -263,7 +265,6 @@ void remove_record_ui()
 		refresh();
 		sleep(1);
 	}
-		
 	zero_current_cd();
 	refresh();
 }

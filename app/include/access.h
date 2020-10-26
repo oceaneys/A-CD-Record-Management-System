@@ -45,6 +45,7 @@ Bool record_exsits(char *);
 
 int list_track_by_title_of_record(int, int, char *);
 int add_track_wrap(char *rtitle, char *title, char *style, int track_no);
+int remove_all_tracks_of_one_record(char *rtitle);
 
 void zero_current_cd(); /* current_cd[0] = '\0' */
 void fulfill_current_cd(char *);
