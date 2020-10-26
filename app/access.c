@@ -29,6 +29,8 @@ static DBM *track_db_ptr = NULL;
 
 static int remove_record_db(char *);
 static int add_record_db(Record *);
+static Record *get_record_by_title(char *);
+static int count_tracks_record(char *);
 
 int db_initialize(int new_database)
 {
@@ -149,21 +151,36 @@ int remove_record_wrap(char *title)
 
 
 /*Beginning of add track*/
-static int add_track(Record *record, Track *track)
+static int add_track_db(Track *track)
 {
+	datum local_key_datum,local_data_datum;
+	char key_to_use[MAX_LEN];
+	int ret;
 
-	record->track_count += 1;
-	list_add_tail(&track->list,&record->track);
+	memset(key_to_use, '\0', sizeof(key_to_use));
+	sprintf(key_to_use, "%s_%d", track->rtitle,track->track_no);
+	local_key_datum.dptr = (void *)key_to_use;
+	local_key_datum.dsize = strlen(key_to_use);
+
+	local_data_datum.dptr = (void *)track;
+	local_data_datum.dsize = sizeof(struct Track);
+
+	ret = dbm_store(track_db_ptr, local_key_datum, local_data_datum, DBM_REPLACE);
+	if(ret != 0)
+		return 1;
 	return 0;
 }
 
-int add_track_wrap(char *rtitle, char *title, char *style) {
+int add_track_wrap(char *r_title, char *title, char *style, int track_no) {
 
-	if(!rtitle){
-		rtitle = (char *)malloc(MAX_LEN * sizeof(char));
-		strncpy(rtitle,current_cd,sizeof(current_cd));
-	}	
-	
+	char rtitle[MAX_LEN];
+
+	if(!r_title){
+		strncpy(rtitle, current_cd, sizeof(current_cd));
+	}else{
+		strncpy(rtitle, r_title, sizeof(r_title));
+	}
+
 	Record *record = get_record_by_title(rtitle);
 	if(NULL == record)
 		return 1;
@@ -172,10 +189,13 @@ int add_track_wrap(char *rtitle, char *title, char *style) {
 	*track = (struct Track){
 	    .list = LIST_HEAD_INIT(track->list)
 	};
-	strncpy(track->title,title,sizeof(title));
-	strncpy(track->style,style,sizeof(style));
+	strncpy(track->rtitle, rtitle, sizeof(rtitle));
+	strncpy(track->title, title, sizeof(title));
+	strncpy(track->style, style, sizeof(style));
+	track->track_no = track_no;
 	
-	add_track(record,track);
+
+	add_track_db(track);
 	return 0;
 }
 
@@ -211,19 +231,20 @@ int remove_all_tracks_of_one_record(char *rtitle)
 	
 }
 
-Record *get_record_by_title(char *title)
+static Record *get_record_by_title(char *title)
 {
-    struct list_head *pos,*n = NULL;
-    struct Record *record = NULL;
+	if(!record_exsits(title))
+		return NULL;
 
-    list_for_each_safe(pos, n, &record_list.list){
-        record = container_of(pos, struct Record, list);
-        if(strncmp(title,record->title,sizeof(record->title)) == 0){
-            return record;
-        }
-    }
+	datum data,key;
+	key.dptr = (void *)title;
+	key.dsize = strlen(title);
 
-    return NULL;
+	data = dbm_fetch(record_db_ptr,key);
+	if(!data.dptr)
+		return NULL;
+
+	return((struct Record *)data.dptr);
 }
 
 
@@ -315,35 +336,54 @@ static Track *get_track_by_title_of_record(Record *record, char *ttitle)
 
 int list_track_by_title_of_record(int start_row, int start_col, char *rtitle)
 {
-	struct list_head *pos, *n = NULL;
 	int row_pos = 1;
 
-	Record *record = get_record_by_title(rtitle);
 
-	if(NULL == record){
+	if(!record_exsits(rtitle)){
 		mvprintw(start_row + 2, start_col, "%s not exsit, choose another record.", current_cd);
 		return 1;
 	}
-
-	if(list_empty(&record->track)){
-		mvprintw(start_row + row_pos, start_col, "%s has no tracks.", record->title);
-		refresh();
-		return 1;
-	}
 	
-	mvprintw(start_row, start_col, "%s%s","Record Title: ",record->title);
-	mvprintw(start_row + 1, start_col, "Track Counts: %d",record->track_count);
+	mvprintw(start_row, start_col, "%s%s","Record Title: ",rtitle);
 
-	mvprintw(start_row + 3 , start_col+1, "Track%12sStyle\n"," ");
+	mvprintw(start_row + 2 , start_col+1, "Track%12sStyle\n"," ");
+	
+	int cnt = 1;
+	datum key,data;
+	char key_to_use[MAX_LEN];
+	Track *track = NULL;
+	for(;;){
+		memset(key_to_use,'\0',sizeof(key_to_use));
+		sprintf(key_to_use, "%s_%d", rtitle,cnt++);
+		key.dptr = (void *)key_to_use;
+		key.dsize = strlen(key_to_use);
 
-	list_for_each_safe(pos, n, &record->track){
-		struct Track *track = container_of(pos, struct Track, list);
+		data = dbm_fetch(track_db_ptr,key);
+		if(!data.dptr) 
+			return 0; /*data.dptr == NULL represents no tracks any more, no error happened;so return 0, not 1*/
+		track = (Track *)data.dptr;
 		mvprintw(start_row + 3 + row_pos, start_col+1, "%-17s%s",track->title,track->style);
 		row_pos++;
 	}
 
 	refresh();
 	return 0;
+
+}
+
+static int count_tracks_record(char *rtitle)
+{
+	int ret;
+	datum key;
+	int track_cnt = 0;
+	for(key = dbm_firstkey(track_db_ptr);key.dptr;key=dbm_nextkey(track_db_ptr)){
+		if((ret = strncmp(rtitle, (char *)key.dptr, strlen(rtitle))) != 0)
+			continue;
+
+		track_cnt++;
+	}
+
+	return track_cnt;
 
 }
 
@@ -363,31 +403,12 @@ void display_all_records(int start_row, int start_col)
 		if(!data.dptr)
 			continue;
 		record = (Record *)data.dptr;
-		mvprintw(start_row + row_pos, start_col,"%-16s%-16s%d\n",record->title,record->artist,record->track_count);
+		mvprintw(start_row + row_pos, start_col,"%-16s%-16s%d\n",record->title,record->artist,count_tracks_record(record->title));
 		row_pos++;
     }
 
 	refresh();
 }
-
-static int display_track_of_record(Record *record)
-{
-		
-    struct list_head *pos,*n = NULL;
-	
-	printf("Track%10sStyle%10sRecord\n","","");
-
-	if(list_empty(&record->track))
-		return 1;
-
-    list_for_each_safe(pos, n, &record->track){
-    	struct Track *track = container_of(pos, struct Track, list);
-		printf("%-15s%-15s%s\n",track->title,track->style,record->title);
-    }
-
-	return 0;
-}
-
 
 void fulfill_current_cd(char *string)
 {

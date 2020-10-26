@@ -371,8 +371,6 @@ int add_track_ui()
 	if(!get_confirm())
 		return 1;
 
-	remove_all_tracks_of_one_record(NULL);
-
 	clear_all_screen();
 	mvprintw(MSG_LINE,0,"Enter a blank line to finish");
 	refresh();
@@ -396,7 +394,7 @@ int add_track_ui()
 		wgetnstr(sub_win_ptr, title, MAX_LEN);
 
 		if(*title){
-			int ret = add_track_wrap(NULL, title, "jazz");
+			int ret = add_track_wrap(NULL, title, "jazz",track - 1);
 			if(ret == 1 ){
 				mvprintw(ERROR_LINE, 0, "Failed");
 				clrtoeol();

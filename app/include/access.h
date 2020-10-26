@@ -19,6 +19,8 @@ typedef enum Bool
 
 typedef struct Track{
     struct list_head list;
+	char rtitle[MAX_LEN];
+	int  track_no;
     char title[MAX_LEN];
     char style[MAX_LEN];
 }Track;
@@ -27,7 +29,7 @@ typedef struct Record{
     struct list_head list;
     char title[MAX_LEN];
     char artist[MAX_LEN];
-    int  track_count;
+	int  track_count;
     struct list_head track;
 }Record;
 
@@ -38,12 +40,11 @@ typedef struct RecordList{
 
 int add_record_wrap(char *, char *);
 int remove_record_wrap(char *);
-Record *get_record_by_title(char *title);
 void display_all_records(int, int);
 Bool record_exsits(char *);
 
 int list_track_by_title_of_record(int, int, char *);
-int add_track_wrap(char *rtitle, char *title, char *style);
+int add_track_wrap(char *rtitle, char *title, char *style, int track_no);
 
 void zero_current_cd(); /* current_cd[0] = '\0' */
 void fulfill_current_cd(char *);
