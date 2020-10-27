@@ -5,11 +5,6 @@
 
 char current_cd[MAX_LEN];
 
-/*simple doubly linked list implementation.*/
-struct list_head{
-    struct list_head *prev,*next;
-};
-
 typedef enum Bool 
 {
 	False = 0,
@@ -18,7 +13,6 @@ typedef enum Bool
 }Bool;
 
 typedef struct Track{
-    struct list_head list;
 	char rtitle[MAX_LEN];
 	int  track_no;
     char title[MAX_LEN];
@@ -26,17 +20,10 @@ typedef struct Track{
 }Track;
 
 typedef struct Record{
-    struct list_head list;
     char title[MAX_LEN];
     char artist[MAX_LEN];
 	int  track_count;
-    struct list_head track;
 }Record;
-
-typedef struct RecordList{
-    int record_cnt;
-    struct list_head list;
-}RecordList;
 
 int add_record_wrap(char *, char *);
 int remove_record_wrap(char *);
@@ -44,7 +31,7 @@ void display_all_records(int, int);
 Bool record_exsits(char *);
 
 int list_track_by_title_of_record(int, int, char *);
-int add_track_wrap(char *rtitle, char *title, char *style, int track_no);
+int add_track_wrap(char *title, char *style, int track_no);
 int remove_all_tracks_of_one_record(char *rtitle);
 
 void zero_current_cd(); /* current_cd[0] = '\0' */
