@@ -372,6 +372,9 @@ int add_track_ui()
 	if(!get_confirm())
 		return 1;
 
+	/*Firstly,delete all the exsiting tracks*/
+	remove_all_tracks_of_one_record(get_current_cd());
+
 	clear_all_screen();
 	mvprintw(MSG_LINE,0,"Enter a blank line to finish");
 	refresh();

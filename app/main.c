@@ -16,7 +16,8 @@ int main(int argc, char **argv)
 	int ret; 
 	initscr();
 
-	ret = db_initialize(0);
+	ret = db_initialize();
+	//ret = db_initialize(0);
 	if(ret == 1){
 		//error_msg_ui("database failed to initialize.");
 		db_close();

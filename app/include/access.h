@@ -20,10 +20,14 @@ typedef struct Track{
 }Track;
 
 typedef struct Record{
+	int  cd_id;
     char title[MAX_LEN];
     char artist[MAX_LEN];
 	int  track_count;
 }Record;
+
+int db_initialize();
+void db_close();
 
 int add_record_wrap(char *, char *);
 int remove_record_wrap(char *);

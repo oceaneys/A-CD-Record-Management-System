@@ -1,0 +1,15 @@
+
+#Follow these steps to create database
+
+mysql -u root -p
+
+grant all on blpcd.* to rick@localhost identified by 'rickbuddy';
+
+quit;
+
+mysql -u rick -p
+
+create database blpcd;
+
+\. create_tables.sql
+\. insert_data.sql
