@@ -111,24 +111,37 @@ static Record *get_record_by_title(char *title)
 }
 
 void display_all_records(int start_row, int start_col)
-{
-	datum key;
-	datum data;
+{	
+
+	int ret;
+	char lsql[MAX_LEN];
+	MYSQL_RES *res;
+	MYSQL_ROW row;
 	int row_pos = 1;
 
 	mvprintw(start_row - 2, start_col,"%s","Display all Records:");
-	mvprintw(start_row, start_col, "Record%10sArtist%10sTrack Counts\n","","");
+	mvprintw(start_row, start_col, "Record%34sArtist%34sTrack Counts\n","","");
 
-	Record *record = NULL;
 
-	for(key = dbm_firstkey(record_db_ptr); key.dptr; key = dbm_nextkey(record_db_ptr)){
-		data = dbm_fetch(record_db_ptr,key);	
-		if(!data.dptr)
-			continue;
-		record = (Record *)data.dptr;
-		mvprintw(start_row + row_pos, start_col,"%-16s%-16s%d\n",record->title,record->artist,count_tracks_record(record->title));
-		row_pos++;
-    }
+	memset(lsql,'\0',sizeof(lsql));
+	sprintf(lsql,"select * from cd,artist where cd.artist_id = artist.id");
+
+	ret = mysql_query(&mysqlconn,lsql);
+	if(ret){
+		mvprintw(start_row - 2, start_col,"SELECT error %d: %s",mysql_errno(&mysqlconn),mysql_error(&mysqlconn));
+		return;
+	}
+	res = mysql_store_result(&mysqlconn);
+	if(res){
+		if(mysql_num_rows(res) > 0){
+			while(row = mysql_fetch_row(res)){
+				mvprintw(start_row + row_pos, start_col,"%-40s%-40s%d\n",row[1],row[4],count_tracks_record(row[1]));
+				row_pos++;
+			}
+
+		}
+		mysql_free_result(res);
+	}
 
 	refresh();
 }
@@ -265,14 +278,34 @@ int list_track_by_title_of_record(int start_row, int start_col, char *rtitle)
 static int count_tracks_record(char *rtitle)
 {
 	int ret;
-	datum key;
-	int track_cnt = 0;
-	for(key = dbm_firstkey(track_db_ptr);key.dptr;key=dbm_nextkey(track_db_ptr)){
-		if((ret = strncmp(rtitle, (char *)key.dptr, strlen(rtitle))) != 0)
-			continue;
+	int track_cnt;
+	int cd_id;
+	char ssql[MAX_LEN];
+	MYSQL_RES *res;
+	MYSQL_ROW row;
 
-		track_cnt++;
+	cd_id = get_record_id(rtitle);
+	if(-1 == cd_id)
+		return -1;
+	memset(ssql,'\0',sizeof(ssql));
+	sprintf(ssql,"SELECT COUNT(*) FROM track WHERE track.cd_id = %d",cd_id);
+	
+	ret = mysql_query(&mysqlconn, ssql);
+	if(ret){
+		fprintf(stderr, "SELECT error %d: %s",mysql_errno(&mysqlconn),mysql_error(&mysqlconn));
+		return -1;
 	}
+	res = mysql_store_result(&mysqlconn);
+	if(res){
+		if(mysql_num_rows(res) > 0){
+			if(row = mysql_fetch_row(res)){
+				sscanf(row[0],"%d",&track_cnt);
+			
+			}
+		}
+		mysql_free_result(res);
+	}
+
 	return track_cnt;
 }
 
