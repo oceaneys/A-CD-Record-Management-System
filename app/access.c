@@ -243,33 +243,42 @@ static Bool track_exsits(char *rtitle,int track_no)
 int list_track_by_title_of_record(int start_row, int start_col, char *rtitle)
 {
 	int row_pos = 1;
+	int ret;
+	int cd_id;
+	char lsql[MAX_LEN];
+	MYSQL_RES *res;
+	MYSQL_ROW row;
 
+	mvprintw(start_row, start_col, "%s%s","Record Title: ",rtitle);
 
-	if(!record_exsits(rtitle)){
+	cd_id = get_record_id(rtitle);
+	if(-1 == cd_id){
 		mvprintw(start_row + 2, start_col, "%s not exsit, choose another record.", rtitle);
 		return 1;
 	}
-	
-	mvprintw(start_row, start_col, "%s%s","Record Title: ",rtitle);
 
-	mvprintw(start_row + 2 , start_col+1, "Track%12sStyle\n"," ");
-	
-	int ret;
-	datum key,data;
-	char key_to_use[MAX_LEN];
-	Track *track = NULL;
-	for(key = dbm_firstkey(track_db_ptr);key.dptr;key=dbm_nextkey(track_db_ptr)){
-	
-		if((ret = strncmp(rtitle, (char *)key.dptr, strlen(rtitle))) != 0)
-			continue;
+	mvprintw(start_row + 2 , start_col+1, "Track%35sStyle\n"," ");
 
-		data = dbm_fetch(track_db_ptr,key);
-		if(!data.dptr) 
-			return 0; 
-		track = (Track *)data.dptr;
-		mvprintw(start_row + 3 + row_pos, start_col+1, "%-17s%s",track->title,track->style);
-		row_pos++;
+	memset(lsql,'\0',sizeof(lsql));
+	sprintf(lsql,"SELECT * FROM track WHERE track.cd_id = %d",cd_id);
+	
+	ret = mysql_query(&mysqlconn,lsql);
+	if(ret){
+		fprintf(stderr, "SELECT error %d: %s", mysql_errno(&mysqlconn),mysql_error(&mysqlconn));
+		return 1;
 	}
+
+	res = mysql_store_result(&mysqlconn);
+	if(res){
+		if(mysql_num_rows(res) > 0){
+			while(row = mysql_fetch_row(res)){
+				mvprintw(start_row + 3 + row_pos, start_col+1, "%-40s%s",row[2],"jazz");
+				row_pos++;
+			}
+		}
+		mysql_free_result(res);
+	}
+	
 	refresh();
 	return 0;
 
@@ -385,6 +394,7 @@ int remove_all_tracks_of_one_record(char *rtitle)
 
 void fulfill_current_cd(char *string)
 {
+	memset(current_cd,'\0',sizeof(current_cd));
 	strncpy(current_cd, string, strlen(string));
 }
 
