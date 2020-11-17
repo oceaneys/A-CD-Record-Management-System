@@ -8,7 +8,7 @@
 #include <ndbm.h>
 #include <mysql.h>
 
-#include "include/access.h"
+#include "access.h"
 
 #define RECORD_DB_FILE_BASE  "record_db"
 #define RECORD_DB_FILE_DIR  "record_db.dir"
@@ -92,22 +92,6 @@ Bool record_exsits(char *title)
 	if(get_record_id(title) == -1)
 		return False;
 	return True;
-}
-
-static Record *get_record_by_title(char *title)
-{
-	if(!record_exsits(title))
-		return NULL;
-
-	datum data,key;
-	key.dptr = (void *)title;
-	key.dsize = strlen(title);
-
-	data = dbm_fetch(record_db_ptr,key);
-	if(!data.dptr)
-		return NULL;
-
-	return((struct Record *)data.dptr);
 }
 
 void display_all_records(int start_row, int start_col)

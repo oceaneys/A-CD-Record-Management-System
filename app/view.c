@@ -7,8 +7,8 @@
 #include <fcntl.h>
 #include <curses.h>
 
-#include "include/view.h"
-#include "include/access.h"
+#include "view.h"
+#include "access.h"
 
 char *main_menu[] = {
 	"add new record",

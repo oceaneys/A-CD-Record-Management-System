@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "include/view.h"
-#include "include/access.h"
+#include "view.h"
+#include "access.h"
 
 int main(int argc, char **argv)
 {
